@@ -1,0 +1,97 @@
+# Backyard Designer Shopify App 启动说明
+
+本文说明下次如何在 Windows PowerShell 中启动 Backyard Designer Shopify App。
+
+## 环境要求
+
+- Node.js 已安装
+- Shopify CLI 已安装并可以执行 `shopify --version`
+- 已拥有 Shopify Partner 账号
+- 开发商店为 `function-613wh0ez.myshopify.com`
+
+## 正常启动
+
+在 PowerShell 中执行：
+
+```powershell
+cd C:\Users\leo.chu\backyard-designer-app
+shopify app dev --config backyard-designer-app --store function-613wh0ez.myshopify.com
+```
+
+启动成功后，终端会显示：
+
+```text
+Ready, watching for changes in your app
+```
+
+同时会显示本次临时生成的 App Proxy 地址和 Shopify 后台预览地址。`trycloudflare.com` 地址每次启动都可能变化，应以终端本次输出为准。
+
+## 第一次启动或登录过期
+
+如果终端提示：
+
+```text
+To run this command, log in to Shopify.
+User verification code: XXXX-XXXX
+```
+
+1. 打开终端给出的 Shopify 授权链接。
+2. 输入终端显示的验证码。
+3. 完成登录和授权后，等待终端继续启动即可。
+
+验证码具有时效性，只使用当前终端显示的验证码，不要复用旧验证码。
+
+## 启动前检查 Prisma
+
+开发命令会自动执行 `npx prisma generate`。如果看到以下错误：
+
+```text
+EPERM: operation not permitted, rename ...query_engine-windows.dll.node
+```
+
+通常是上一次 Node/Prisma 进程仍占用文件。按以下步骤处理：
+
+1. 关闭其他正在运行的 Shopify App、React Router 或 Prisma 终端。
+2. 在任务管理器中结束属于本项目的残留 `node.exe` 进程。
+3. 重新生成 Prisma Client：
+
+```powershell
+cd C:\Users\leo.chu\backyard-designer-app
+npx prisma generate
+```
+
+4. 再次执行正常启动命令。
+
+不要在不确认进程归属的情况下结束所有 Node 进程，因为其他项目或编辑器服务也可能使用 Node。
+
+## 常用地址
+
+开发服务器启动后，以终端输出为准：
+
+- Shopify App 后台预览：终端中的 `Preview URL`
+- App Proxy：终端中的 `app_proxy | Using URL`
+- GraphiQL：通常为 `http://localhost:3457/graphiql?...`
+- 本地 React Router 服务：终端显示的 `Local` 地址
+
+直接访问旧的 Cloudflare 地址可能失效，因为开发隧道会在重启后更换域名。
+
+## 停止项目
+
+在运行 Shopify CLI 的终端按：
+
+```text
+Ctrl + C
+```
+
+等待终端显示 `Shutting down dev` 后再关闭窗口。下次启动时重新执行正常启动命令即可。
+
+## 代码修改后的验证
+
+修改 App 代码后，保持 `shopify app dev` 运行，CLI 会自动监听并重新加载。需要单独构建时执行：
+
+```powershell
+npm run build
+```
+
+如果修改的是独立 Demo 项目 `C:\Users\leo.chu\backyard-3d-demo`，则进入该目录运行其 Vite 命令，不要在 Shopify App 目录中启动 Demo。
+

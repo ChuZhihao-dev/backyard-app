@@ -32,3 +32,20 @@ model Session {
   refreshToken        String?
   refreshTokenExpires DateTime?
 }
+
+model DesignerProduct {
+  id         String   @id @default(cuid())
+  shopDomain String
+  productGid String
+  variantGid String
+  widthM     Float
+  heightM    Float
+  depthM     Float
+  modelUrl   String?
+  enabled    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([shopDomain, variantGid])
+  @@index([shopDomain, enabled])
+}
