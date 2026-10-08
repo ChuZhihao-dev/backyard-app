@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { LoaderFunctionArgs } from "react-router";
@@ -38,17 +39,35 @@ function safeJson(value: unknown) {
     .replaceAll("&", "\\u0026");
 }
 
+function buildCsp(nonce: string) {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval'`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https://cdn.shopify.com https://*.myshopify.com",
+    "font-src 'self' data: https://cdn.shopify.com",
+    "connect-src 'self' https://cdn.shopify.com https://*.myshopify.com",
+    "worker-src 'self' blob:",
+    "media-src 'self' https://cdn.shopify.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'self' https://*.myshopify.com https://admin.shopify.com",
+  ].join("; ");
+}
+
 async function renderDesigner(config: unknown, proxyPath: string) {
   const indexPath = path.join(await designerDemoDir(), "index.html");
   let html = await readFile(indexPath, "utf8");
+  const nonce = randomBytes(16).toString("base64");
   const normalizedProxyPath = `/${proxyPath.replace(/^\/+|\/+$/g, "")}`;
   html = html
     .replaceAll("/designer-demo/assets/", `${normalizedProxyPath}/assets/`)
     .replace(
       "</head>",
-      `<script>window.__BACKYARD_CONFIG__=${safeJson(config)};</script></head>`,
+      `<script nonce="${nonce}">window.__BACKYARD_CONFIG__=${safeJson(config)};</script></head>`,
     );
-  return html;
+  return { html, nonce };
 }
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -135,7 +154,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const proxyPath =
     url.searchParams.get("path_prefix") ?? "/apps/backyard-designer";
-  const html = await renderDesigner(
+  const { html, nonce } = await renderDesigner(
     { products, recommendationSets, cartMode: "shopify" },
     proxyPath,
   );
@@ -143,8 +162,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "private, no-store",
-      "Content-Security-Policy":
-        "frame-ancestors 'self' https://*.myshopify.com https://admin.shopify.com",
+      "Content-Security-Policy": buildCsp(nonce),
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
     },
   });
 };
