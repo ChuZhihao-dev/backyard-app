@@ -4,6 +4,7 @@ import type { LoaderFunctionArgs } from "react-router";
 
 import prisma from "../db.server";
 import { authenticate } from "../shopify.server";
+import { loadRecommendationSets } from "../recommendations.server";
 import {
   findReadyGlbUrl,
   type ShopifyMediaNode,
@@ -61,6 +62,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const bindings = await prisma.designerProduct.findMany({
     where: { shopDomain: context.session.shop, enabled: true },
   });
+  const recommendationSets = await loadRecommendationSets(
+    context.session.shop,
+    new Set(bindings.map((binding) => binding.variantGid)),
+  );
   let products: Array<Record<string, unknown>> = [];
 
   if (bindings.length) {
@@ -131,7 +136,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const proxyPath =
     url.searchParams.get("path_prefix") ?? "/apps/backyard-designer";
   const html = await renderDesigner(
-    { products, cartMode: "shopify" },
+    { products, recommendationSets, cartMode: "shopify" },
     proxyPath,
   );
   return new Response(html, {

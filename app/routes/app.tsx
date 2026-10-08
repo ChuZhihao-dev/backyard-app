@@ -20,6 +20,7 @@ export default function App() {
       <s-app-nav>
         <s-link href="/app">Products</s-link>
         <s-link href="/app/designer-preview">3D Preview</s-link>
+        <s-link href="/app/recommendations">推荐组合</s-link>
         <s-link href="/app/additional">Designer settings</s-link>
       </s-app-nav>
       <Outlet />

@@ -5,6 +5,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
+import { loadRecommendationSets } from "../recommendations.server";
 import {
   findReadyGlbUrl,
   type ShopifyMediaNode,
@@ -36,7 +37,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     where: { shopDomain: session.shop, enabled: true },
   });
 
-  if (!bindings.length) return { products: [] };
+  const recommendationSets = await loadRecommendationSets(
+    session.shop,
+    new Set(bindings.map((binding) => binding.variantGid)),
+  );
+
+  if (!bindings.length) return { products: [], recommendationSets };
 
   const response = await admin.graphql(
     `#graphql
@@ -101,11 +107,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         },
       ];
     }),
+    recommendationSets,
   };
 };
 
 export default function DesignerPreview() {
-  const { products } = useLoaderData<typeof loader>();
+  const { products, recommendationSets } = useLoaderData<typeof loader>();
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -114,6 +121,7 @@ export default function DesignerPreview() {
         {
           type: "backyard:catalog:v1",
           products,
+          recommendationSets,
           cartMode: "preview",
         },
         window.location.origin,
@@ -122,7 +130,7 @@ export default function DesignerPreview() {
     iframe?.addEventListener("load", sendCatalog);
     sendCatalog();
     return () => iframe?.removeEventListener("load", sendCatalog);
-  }, [products]);
+  }, [products, recommendationSets]);
 
   return (
     <div
