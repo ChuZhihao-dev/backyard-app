@@ -3,8 +3,7 @@
 client_id = "736e6779059b8e0faced2b8524120c7c"
 name = "backyard-designer-app"
 # Replace this host with your production app URL before running `shopify app deploy`.
-# The examples use a Render service named "backyard-designer" (see README > Deployment).
-application_url = "https://backyard-designer.onrender.com"
+application_url = "https://backyard-app-t8se.onrender.com"
 embedded = true
 
 [access_scopes]
@@ -29,11 +28,7 @@ api_version = "2026-07"
 
 [auth]
 redirect_urls = [
-  "https://backyard-designer.onrender.com/auth/callback",
-  "https://backyard-designer.onrender.com/auth/shopify/callback",
-  "https://backyard-designer.onrender.com/api/auth/callback"
+  "https://backyard-app-t8se.onrender.com/auth/callback",
+  "https://backyard-app-t8se.onrender.com/auth/shopify/callback",
+  "https://backyard-app-t8se.onrender.com/api/auth/callback"
 ]
-
-[build]
-include_config_on_deploy = true
-automatically_update_urls_on_dev = true

@@ -107,7 +107,7 @@ The app ships with a multi-stage `Dockerfile`, so any container host works. This
 3. Set **Runtime** to **Docker**. Render reads the `Dockerfile` and serves the app on `PORT`.
 4. Add the environment variables below under **Environment**.
 5. Deploy. On boot the container runs `prisma migrate deploy`, so the schema is created automatically.
-6. Copy the service URL (for example `https://backyard-designer.onrender.com`) and replace the host in
+6. Copy the service URL (for example `https://backyard-app-t8se.onrender.com`) and replace the host in
    `shopify.app.toml` (`application_url` and the `[auth] redirect_urls` entries).
 7. Publish the app configuration and extensions:
 
@@ -122,7 +122,7 @@ The app ships with a multi-stage `Dockerfile`, so any container host works. This
 | `DATABASE_URL` | Yes | Production PostgreSQL connection string |
 | `SHOPIFY_API_KEY` | Yes | App client ID (`736e6779059b8e0faced2b8524120c7c`) |
 | `SHOPIFY_API_SECRET` | Yes | App client secret from the Partner Dashboard |
-| `SHOPIFY_APP_URL` | Yes | Deployed URL, e.g. `https://backyard-designer.onrender.com` |
+| `SHOPIFY_APP_URL` | Yes | Deployed URL, e.g. `https://backyard-app-t8se.onrender.com` |
 | `SCOPES` | Yes | `read_products` |
 | `NODE_ENV` | Yes | `production` |
 
