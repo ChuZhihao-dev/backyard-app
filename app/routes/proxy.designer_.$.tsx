@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import type { LoaderFunctionArgs } from "react-router";
 
+import { designerDemoDir } from "../designer-demo.server";
 import { authenticate } from "../shopify.server";
 
 const ASSET_PATH = /^assets\/([a-zA-Z0-9._-]+\.(js|css))$/;
@@ -13,7 +14,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
 
   try {
     const file = await readFile(
-      path.join(process.cwd(), "public", "designer-demo", "assets", match[1]),
+      path.join(await designerDemoDir(), "assets", match[1]),
     );
     return new Response(new Uint8Array(file), {
       headers: {

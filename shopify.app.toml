@@ -1,40 +1,23 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "dfece9d6fd151c197d757b7484c82ed4"
-name = "3D-"
-application_url = "https://shopify.dev/apps/default-app-home"
+client_id = "736e6779059b8e0faced2b8524120c7c"
+name = "backyard-designer-app"
+# Replace this host with your production app URL before running `shopify app deploy`.
+# The examples use a Render service named "backyard-designer" (see README > Deployment).
+application_url = "https://backyard-designer.onrender.com"
 embedded = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
+scopes = "read_products"
 
-[product.metafields.app.demo_info]
-type = "single_line_text_field"
-name = "Demo Source Info"
-description = "Tracks products created by the Shopify app template for development"
-
-  [product.metafields.app.demo_info.access]
-  admin = "merchant_read_write"
-
-[metaobjects.app.example]
-name = "Example"
-description = "An example metaobject definition created by this template"
-
-  [metaobjects.app.example.access]
-  admin = "merchant_read_write"
-
-[metaobjects.app.example.fields.title]
-name = "Title"
-type = "single_line_text_field"
-required = true
-
-[metaobjects.app.example.fields.description]
-name = "Description"
-type = "multi_line_text_field"
+[app_proxy]
+url = "/proxy/designer"
+prefix = "apps"
+subpath = "backyard-designer"
 
 [webhooks]
-api_version = "2026-10"
+api_version = "2026-07"
 
   [[webhooks.subscriptions]]
   uri = "/webhooks/app/uninstalled"
@@ -45,7 +28,11 @@ api_version = "2026-10"
   topics = [ "app/scopes_update" ]
 
 [auth]
-redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+redirect_urls = [
+  "https://backyard-designer.onrender.com/auth/callback",
+  "https://backyard-designer.onrender.com/auth/shopify/callback",
+  "https://backyard-designer.onrender.com/api/auth/callback"
+]
 
 [build]
 include_config_on_deploy = true

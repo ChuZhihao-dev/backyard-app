@@ -4,6 +4,7 @@ import type { LoaderFunctionArgs } from "react-router";
 
 import prisma from "../db.server";
 import { authenticate } from "../shopify.server";
+import { designerDemoDir } from "../designer-demo.server";
 import { loadRecommendationSets } from "../recommendations.server";
 import {
   findReadyGlbUrl,
@@ -38,8 +39,7 @@ function safeJson(value: unknown) {
 }
 
 async function renderDesigner(config: unknown, proxyPath: string) {
-  const publicRoot = path.join(process.cwd(), "public");
-  const indexPath = path.join(publicRoot, "designer-demo", "index.html");
+  const indexPath = path.join(await designerDemoDir(), "index.html");
   let html = await readFile(indexPath, "utf8");
   const normalizedProxyPath = `/${proxyPath.replace(/^\/+|\/+$/g, "")}`;
   html = html

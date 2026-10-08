@@ -79,54 +79,57 @@ For more information on the Shopify Dev MCP please read [the documentation](http
 
 ### Application Storage
 
-This template uses [Prisma](https://www.prisma.io/) to store session data, by default using an [SQLite](https://www.sqlite.org/index.html) database.
-The database is defined as a Prisma schema in `prisma/schema.prisma`.
+This app uses [Prisma](https://www.prisma.io/) with a [PostgreSQL](https://www.postgresql.org/) database.
+The schema is defined in `prisma/schema.prisma` and the connection string is read from the `DATABASE_URL` environment variable (see `.env.example`).
 
-This use of SQLite works in production if your app runs as a single instance.
-The database that works best for you depends on the data your app needs and how it is queried.
-Here’s a short list of databases providers that provide a free tier to get started:
+This setup works in production across multiple instances. To run Postgres locally, use the included `docker-compose.yml` (`docker compose up -d`); otherwise use any hosted provider below.
+Free hosted Postgres to get started: [Neon](https://neon.com), [Supabase](https://supabase.com), [Railway](https://railway.com).
 
-| Database   | Type             | Hosters                                                                                                                                                                                                                                    |
-| ---------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| MySQL      | SQL              | [Digital Ocean](https://www.digitalocean.com/products/managed-databases-mysql), [Planet Scale](https://planetscale.com/), [Amazon Aurora](https://aws.amazon.com/rds/aurora/), [Google Cloud SQL](https://cloud.google.com/sql/docs/mysql) |
-| PostgreSQL | SQL              | [Digital Ocean](https://www.digitalocean.com/products/managed-databases-postgresql), [Amazon Aurora](https://aws.amazon.com/rds/aurora/), [Google Cloud SQL](https://cloud.google.com/sql/docs/postgres)                                   |
-| Redis      | Key-value        | [Digital Ocean](https://www.digitalocean.com/products/managed-databases-redis), [Amazon MemoryDB](https://aws.amazon.com/memorydb/)                                                                                                        |
-| MongoDB    | NoSQL / Document | [Digital Ocean](https://www.digitalocean.com/products/managed-databases-mongodb), [MongoDB Atlas](https://www.mongodb.com/atlas/database)                                                                                                  |
-
-To use one of these, you can use a different [datasource provider](https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#datasource) in your `schema.prisma` file, or a different [SessionStorage adapter package](https://github.com/Shopify/shopify-api-js/blob/main/packages/shopify-api/docs/guides/session-storage.md).
+Run `npx prisma migrate deploy` (with `DATABASE_URL` set) to apply the schema. See the [Prisma migrations guide](https://www.prisma.io/docs/orm/prisma-migrate) when you change the schema.
 
 ### Build
 
-Build the app by running the command below with the package manager of your choice:
-
-Using yarn:
-
-```shell
-yarn build
-```
-
-Using npm:
+Build the app with npm:
 
 ```shell
 npm run build
 ```
 
-Using pnpm:
-
-```shell
-pnpm run build
-```
-
 ## Hosting
 
-When you're ready to set up your app in production, you can follow [our deployment documentation](https://shopify.dev/docs/apps/launch/deployment) to host it externally. From there, you have a few options:
+The app ships with a multi-stage `Dockerfile`, so any container host works. This guide uses
+[Render](https://render.com) because it builds the Dockerfile directly from GitHub and needs no local Docker.
 
-- [Google Cloud Run](https://shopify.dev/docs/apps/launch/deployment/deploy-to-google-cloud-run): This tutorial is written specifically for this example repo, and is compatible with the extended steps included in the subsequent [**Build your app**](tutorial) in the **Getting started** docs. It is the most detailed tutorial for taking a React Router-based Shopify app and deploying it to production. It includes configuring permissions and secrets, setting up a production database, and even hosting your apps behind a load balancer across multiple regions.
-- [Fly.io](https://fly.io/docs/js/shopify/): Leverages the Fly.io CLI to quickly launch Shopify apps to a single machine.
-- [Render](https://render.com/docs/deploy-shopify-app): This tutorial guides you through using Docker to deploy and install apps on a Dev store.
-- [Manual deployment guide](https://shopify.dev/docs/apps/launch/deployment/deploy-to-hosting-service): This resource provides general guidance on the requirements of deployment including environment variables, secrets, and persistent data.
+### Deploy to Render
 
-When you reach the step for [setting up environment variables](https://shopify.dev/docs/apps/deployment/web#set-env-vars), you also need to set the variable `NODE_ENV=production`.
+1. Push this repository to GitHub (this repo: `ChuZhihao-dev/backyard-app`).
+2. In Render: **New → Web Service → Build and deploy from a Git repository**, and pick this repo.
+3. Set **Runtime** to **Docker**. Render reads the `Dockerfile` and serves the app on `PORT`.
+4. Add the environment variables below under **Environment**.
+5. Deploy. On boot the container runs `prisma migrate deploy`, so the schema is created automatically.
+6. Copy the service URL (for example `https://backyard-designer.onrender.com`) and replace the host in
+   `shopify.app.toml` (`application_url` and the `[auth] redirect_urls` entries).
+7. Publish the app configuration and extensions:
+
+   ```shell
+   shopify app deploy
+   ```
+
+### Environment variables
+
+| Variable | Required | Value |
+| - | - | - |
+| `DATABASE_URL` | Yes | Production PostgreSQL connection string |
+| `SHOPIFY_API_KEY` | Yes | App client ID (`736e6779059b8e0faced2b8524120c7c`) |
+| `SHOPIFY_API_SECRET` | Yes | App client secret from the Partner Dashboard |
+| `SHOPIFY_APP_URL` | Yes | Deployed URL, e.g. `https://backyard-designer.onrender.com` |
+| `SCOPES` | Yes | `read_products` |
+| `NODE_ENV` | Yes | `production` |
+
+Keep secrets out of git. Render stores them encrypted; locally they live in `.env` (gitignored).
+
+Other supported hosts: [Google Cloud Run](https://shopify.dev/docs/apps/launch/deployment/deploy-to-google-cloud-run),
+[Fly.io](https://fly.io/docs/js/shopify/), and the [manual deployment guide](https://shopify.dev/docs/apps/launch/deployment/deploy-to-hosting-service).
 
 ## Gotchas / Troubleshooting
 
@@ -135,10 +138,10 @@ When you reach the step for [setting up environment variables](https://shopify.d
 If you get an error like:
 
 ```
-The table `main.Session` does not exist in the current database.
+The table `public.Session` does not exist in the current database.
 ```
 
-Create the database for Prisma. Run the `setup` script in `package.json` using `npm`, `yarn` or `pnpm`.
+Make sure `DATABASE_URL` is set, then apply the schema with `npx prisma migrate deploy` (or `npm run setup`).
 
 ### Navigating/redirecting breaks an embedded app
 

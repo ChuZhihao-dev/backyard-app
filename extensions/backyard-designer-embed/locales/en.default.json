@@ -1,0 +1,12 @@
+{
+  "backyard_designer": {
+    "launcher": {
+      "button_label": "Design your backyard"
+    },
+    "dialog": {
+      "title": "3D Backyard Designer",
+      "close": "Close designer",
+      "frame_title": "3D Backyard Designer"
+    }
+  }
+}

@@ -1,3 +1,15 @@
+.git
+.github
+.cursor
+.gemini
 .cache
 build
 node_modules
+.react-router
+.shopify
+.shopify.lock
+prisma/dev.sqlite
+prisma/dev.sqlite-journal
+database.sqlite
+.env
+.env.*

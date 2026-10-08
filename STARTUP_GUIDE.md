@@ -8,6 +8,48 @@
 - Shopify CLI 已安装并可以执行 `shopify --version`
 - 已拥有 Shopify Partner 账号
 - 开发商店为 `function-613wh0ez.myshopify.com`
+- 一个 PostgreSQL 数据库（见下方「配置数据库」）
+
+## 配置数据库（PostgreSQL）
+
+App 使用 PostgreSQL 存储会话、设计器商品和推荐组合，连接串通过环境变量 `DATABASE_URL` 提供。
+
+### 方式一：免费的云数据库（推荐，免安装）
+
+1. 打开 https://neon.com 注册（可用 GitHub 登录，免费额度足够开发）。
+2. 新建一个 Project，复制它给出的 **Connection string**，形如：
+   `postgresql://user:password@ep-xxx.aws.neon.tech/neondb?sslmode=require`
+3. 在项目根目录创建 `.env` 文件（可从 `.env.example` 复制），把连接串填进去：
+
+```env
+DATABASE_URL="postgresql://user:password@ep-xxx.aws.neon.tech/neondb?sslmode=require"
+```
+
+> `shopify app dev` 会在 `.env` 里写入 `SHOPIFY_*` 变量，请保留已有的 `DATABASE_URL` 行。
+
+### 方式二：本机 Docker
+
+已安装 Docker Desktop 时，在项目根目录执行：
+
+```powershell
+docker compose up -d
+```
+
+然后把 `.env` 里的 `DATABASE_URL` 设置为：
+
+```env
+DATABASE_URL="postgresql://backyard:backyard@localhost:5432/backyard?schema=public"
+```
+
+### 首次初始化或迁移
+
+设置好 `DATABASE_URL` 后，把表结构创建到数据库：
+
+```powershell
+npx prisma migrate deploy
+```
+
+`shopify app dev` 每次启动也会自动执行这一步，通常无需手动操作。需要可视化查看数据时运行 `npm run db:studio`。
 
 ## 正常启动
 
@@ -15,7 +57,7 @@
 
 ```powershell
 cd C:\Users\leo.chu\backyard-designer-app
-shopify app dev --config backyard-designer-app --store function-613wh0ez.myshopify.com
+shopify app dev --store function-613wh0ez.myshopify.com
 ```
 
 启动成功后，终端会显示：
@@ -93,5 +135,12 @@ Ctrl + C
 npm run build
 ```
 
-如果修改的是独立 Demo 项目 `C:\Users\leo.chu\backyard-3d-demo`，则进入该目录运行其 Vite 命令，不要在 Shopify App 目录中启动 Demo。
+如果修改的是独立 Demo 项目 `C:\Users\leo.chu\backyard-3d-demo`，则进入该目录运行其 Vite 命令，不要在 Shopify App 目录中启动 Demo。构建完成后，回到 App 目录把产物同步进来（该命令会先清空旧的 `public/designer-demo`，避免遗留过期文件）：
+
+```powershell
+cd C:\Users\leo.chu\backyard-3d-demo
+npm run build
+cd C:\Users\leo.chu\backyard-designer-app
+npm run sync:designer-demo
+```
 

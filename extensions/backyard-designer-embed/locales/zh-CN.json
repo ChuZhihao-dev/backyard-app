@@ -1,0 +1,12 @@
+{
+  "backyard_designer": {
+    "launcher": {
+      "button_label": "设计你的后院"
+    },
+    "dialog": {
+      "title": "3D 后院设计器",
+      "close": "关闭设计器",
+      "frame_title": "3D 后院设计器"
+    }
+  }
+}
