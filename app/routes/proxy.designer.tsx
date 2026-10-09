@@ -105,7 +105,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
                 title
                 featuredImage { url }
                 onlineStoreUrl
-                modelFile: metafield(namespace: "$app", key: "glb") {
+                modelFile: metafield(namespace: "custom", key: "glb") {
                   reference {
                     __typename
                     ... on GenericFile {

@@ -10,14 +10,6 @@ embedded = true
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_products"
 
-[product.metafields.app.glb]
-type = "file_reference"
-name = "GLB"
-description = "Upload a .glb file to show this product in the 3D Backyard Designer."
-
-  [product.metafields.app.glb.access]
-  admin = "merchant_read_write"
-
 [app_proxy]
 url = "/proxy/designer"
 prefix = "apps"

@@ -182,7 +182,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
               url
               altText
             }
-            modelFile: metafield(namespace: "$app", key: "glb") {
+            modelFile: metafield(namespace: "custom", key: "glb") {
               reference {
                 __typename
                 ... on GenericFile {
