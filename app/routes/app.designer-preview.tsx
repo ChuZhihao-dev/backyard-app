@@ -7,7 +7,9 @@ import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 import { loadRecommendationSets } from "../recommendations.server";
 import {
+  findFileReferenceUrl,
   findReadyGlbUrl,
+  type MetafieldFileReference,
   type ShopifyMediaNode,
 } from "../shopify-model3d";
 
@@ -24,7 +26,7 @@ type VariantNodesResponse = {
         featuredImage: { url: string } | null;
         onlineStoreUrl: string | null;
         modelFile: {
-          reference: { url: string } | null;
+          reference: MetafieldFileReference;
         } | null;
         media: {
           nodes: ShopifyMediaNode[];
@@ -66,6 +68,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
                   __typename
                   ... on GenericFile {
                     url
+                  }
+                  ... on Model3d {
+                    sources {
+                      url
+                      format
+                    }
+                  }
+                  ... on MediaImage {
+                    image {
+                      url
+                    }
                   }
                 }
               }
@@ -114,7 +127,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           depth: binding.depthM,
           height: binding.heightM,
           modelUrl:
-            variant.product.modelFile?.reference?.url ??
+            findFileReferenceUrl(variant.product.modelFile?.reference ?? null) ??
             findReadyGlbUrl(variant.product.media.nodes) ??
             binding.modelUrl,
         },

@@ -16,7 +16,9 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 import {
+  findFileReferenceUrl,
   getModel3dAvailability,
+  type MetafieldFileReference,
   type ShopifyMediaNode,
 } from "../shopify-model3d";
 
@@ -38,7 +40,7 @@ type DesignerProduct = {
     altText: string | null;
   } | null;
   modelFile: {
-    reference: { url: string } | null;
+    reference: MetafieldFileReference;
   } | null;
   variants: {
     nodes: DesignerVariant[];
@@ -187,6 +189,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
                 __typename
                 ... on GenericFile {
                   url
+                }
+                ... on Model3d {
+                  sources {
+                    url
+                    format
+                  }
+                }
+                ... on MediaImage {
+                  image {
+                    url
+                  }
                 }
               }
             }
@@ -356,7 +369,9 @@ export default function Index() {
               {products.flatMap((product) =>
                 product.variants.nodes.map((variant) => {
                   const binding = bindingByVariant.get(variant.id);
-                  const modelStatus = product.modelFile?.reference?.url
+                  const modelStatus = findFileReferenceUrl(
+                    product.modelFile?.reference ?? null,
+                  )
                     ? ("ready" as const)
                     : getModel3dAvailability(product.media.nodes);
                   return (
