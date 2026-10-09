@@ -89,7 +89,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const productGid = String(formData.get("productGid") ?? "");
   const variantGid = String(formData.get("variantGid") ?? "");
-  const enabled = formData.get("disable") !== "on";
+  const disable = formData.get("disable") === "on";
 
   if (
     !productGid.startsWith("gid://shopify/Product/") ||
@@ -115,6 +115,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return { error: "This variant no longer belongs to the selected product." };
   }
 
+  if (disable) {
+    await prisma.designerProduct.updateMany({
+      where: { shopDomain: session.shop, variantGid },
+      data: { enabled: false },
+    });
+    return redirect("/app?binding=disabled");
+  }
+
   try {
     await prisma.designerProduct.upsert({
       where: {
@@ -128,7 +136,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         heightM: positiveDimension(formData, "heightM"),
         depthM: positiveDimension(formData, "depthM"),
         modelUrl: null,
-        enabled,
+        enabled: true,
       },
       update: {
         productGid,
@@ -136,7 +144,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         heightM: positiveDimension(formData, "heightM"),
         depthM: positiveDimension(formData, "depthM"),
         modelUrl: null,
-        enabled,
+        enabled: true,
       },
     });
   } catch (error) {
@@ -148,7 +156,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     };
   }
 
-  return redirect(`/app?binding=${enabled ? "enabled" : "disabled"}`);
+  return redirect("/app?binding=enabled");
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -356,7 +364,6 @@ export default function Index() {
             <s-table-header-row>
               <s-table-header listSlot="primary">Product</s-table-header>
               <s-table-header listSlot="secondary">Variant</s-table-header>
-              <s-table-header listSlot="labeled">SKU</s-table-header>
               <s-table-header listSlot="labeled" format="currency">
                 Price
               </s-table-header>
@@ -396,8 +403,16 @@ export default function Index() {
                           <s-text type="strong">{product.title}</s-text>
                         </s-stack>
                       </s-table-cell>
-                      <s-table-cell>{variant.title}</s-table-cell>
-                      <s-table-cell>{variant.sku || "-"}</s-table-cell>
+                      <s-table-cell>
+                        <s-stack direction="block" gap="none">
+                          <s-text>{variant.title}</s-text>
+                          {variant.sku ? (
+                            <s-text color="subdued" fontSize="small-200">
+                              {variant.sku}
+                            </s-text>
+                          ) : null}
+                        </s-stack>
+                      </s-table-cell>
                       <s-table-cell>
                         {formatMoney(variant.price, currencyCode)}
                       </s-table-cell>
@@ -411,99 +426,121 @@ export default function Index() {
                         </s-badge>
                       </s-table-cell>
                       <s-table-cell>
-                        <Form method="post" style={{ minWidth: 420 }}>
-                          <input
-                            type="hidden"
-                            name="productGid"
-                            value={product.id}
-                          />
-                          <input
-                            type="hidden"
-                            name="variantGid"
-                            value={variant.id}
-                          />
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "end",
-                              flexWrap: "wrap",
-                              gap: 8,
-                            }}
-                          >
-                            {(["widthM", "depthM", "heightM"] as const).map(
-                              (name) => (
-                                <label
-                                  key={name}
-                                  style={{
-                                    display: "grid",
-                                    gap: 3,
-                                    fontSize: 12,
-                                  }}
-                                >
-                                  {name === "widthM"
-                                    ? "W (m)"
-                                    : name === "depthM"
-                                      ? "D (m)"
-                                      : "H (m)"}
-                                  <input
-                                    name={name}
-                                    type="number"
-                                    min="0.01"
-                                    max="100"
-                                    step="0.01"
-                                    required
-                                    defaultValue={binding?.[name] ?? 1}
-                                    style={{ width: 68, padding: 6 }}
-                                  />
-                                </label>
-                              ),
-                            )}
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "flex-end",
+                            flexWrap: "wrap",
+                            gap: 10,
+                          }}
+                        >
+                          <Form method="post">
+                            <input
+                              type="hidden"
+                              name="productGid"
+                              value={product.id}
+                            />
+                            <input
+                              type="hidden"
+                              name="variantGid"
+                              value={variant.id}
+                            />
                             <div
                               style={{
-                                display: "grid",
-                                gap: 3,
-                                minWidth: 116,
-                                fontSize: 12,
+                                display: "flex",
+                                alignItems: "flex-end",
+                                flexWrap: "wrap",
+                                gap: 8,
                               }}
                             >
-                              Shopify 3D media
-                              <s-badge
-                                tone={
-                                  modelStatus === "ready"
-                                    ? "success"
-                                    : modelStatus === "processing"
-                                      ? "caution"
-                                      : "neutral"
-                                }
+                              {(["widthM", "depthM", "heightM"] as const).map(
+                                (name) => (
+                                  <label
+                                    key={name}
+                                    style={{
+                                      display: "grid",
+                                      gap: 3,
+                                      fontSize: 12,
+                                    }}
+                                  >
+                                    {name === "widthM"
+                                      ? "W (m)"
+                                      : name === "depthM"
+                                        ? "D (m)"
+                                        : "H (m)"}
+                                    <input
+                                      name={name}
+                                      type="number"
+                                      min="0.01"
+                                      max="100"
+                                      step="0.01"
+                                      required
+                                      defaultValue={binding?.[name] ?? 1}
+                                      style={{ width: 58, padding: 6 }}
+                                    />
+                                  </label>
+                                ),
+                              )}
+                              <div
+                                style={{
+                                  display: "grid",
+                                  gap: 3,
+                                  minWidth: 84,
+                                  fontSize: 12,
+                                }}
                               >
-                                {modelStatus === "ready"
-                                  ? "GLB ready"
-                                  : modelStatus === "processing"
-                                    ? "Processing"
-                                    : "No GLB"}
-                              </s-badge>
-                            </div>
-                            <s-button
-                              type="submit"
-                              variant="primary"
-                              icon="save"
-                            >
-                              {binding?.enabled
-                                ? "Save settings"
-                                : "Add to designer"}
-                            </s-button>
-                            {binding?.enabled ? (
-                              <button
-                                name="disable"
-                                value="on"
+                                GLB model
+                                <s-badge
+                                  tone={
+                                    modelStatus === "ready"
+                                      ? "success"
+                                      : modelStatus === "processing"
+                                        ? "caution"
+                                        : "neutral"
+                                  }
+                                >
+                                  {modelStatus === "ready"
+                                    ? "Ready"
+                                    : modelStatus === "processing"
+                                      ? "Processing"
+                                      : "None"}
+                                </s-badge>
+                              </div>
+                              <s-button
                                 type="submit"
-                                style={{ padding: "7px 12px", marginBottom: 1 }}
+                                variant="primary"
+                                icon="save"
+                              >
+                                {binding?.enabled
+                                  ? "Save settings"
+                                  : "Add to designer"}
+                              </s-button>
+                            </div>
+                          </Form>
+                          {binding?.enabled ? (
+                            <Form method="post">
+                              <input
+                                type="hidden"
+                                name="productGid"
+                                value={product.id}
+                              />
+                              <input
+                                type="hidden"
+                                name="variantGid"
+                                value={variant.id}
+                              />
+                              <input type="hidden" name="disable" value="on" />
+                              <s-button
+                                type="submit"
+                                tone="critical"
+                                variant="secondary"
+                                icon="delete"
                               >
                                 Remove
-                              </button>
-                            ) : null}
-                          </div>
-                        </Form>
+                              </s-button>
+                            </Form>
+                          ) : null}
+                        </div>
                       </s-table-cell>
                     </s-table-row>
                   );
@@ -514,7 +551,7 @@ export default function Index() {
         )}
       </s-section>
 
-      <s-section slot="aside" heading="Catalog status">
+      <s-section heading="Catalog status">
         <s-stack direction="block" gap="base">
           <s-text>
             Products on this page:{" "}
@@ -529,7 +566,7 @@ export default function Index() {
         </s-stack>
       </s-section>
 
-      <s-section slot="aside" heading="Next step">
+      <s-section heading="Next step">
         <s-paragraph color="subdued">
           Open 3D Preview after saving. Only enabled variants are sent to the
           designer; Shopify remains the source of truth for price and product
