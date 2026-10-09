@@ -24,6 +24,9 @@ type VariantNodesResponse = {
         title: string;
         featuredImage: { url: string } | null;
         onlineStoreUrl: string | null;
+        modelFile: {
+          reference: { url: string } | null;
+        } | null;
         media: {
           nodes: ShopifyMediaNode[];
         };
@@ -102,6 +105,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
                 title
                 featuredImage { url }
                 onlineStoreUrl
+                modelFile: metafield(namespace: "$app", key: "glb") {
+                  reference {
+                    __typename
+                    ... on GenericFile {
+                      url
+                    }
+                  }
+                }
                 media(first: 20) {
                   nodes {
                     mediaContentType
@@ -145,7 +156,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           depth: binding.depthM,
           height: binding.heightM,
           modelUrl:
-            findReadyGlbUrl(variant.product.media.nodes) ?? binding.modelUrl,
+            variant.product.modelFile?.reference?.url ??
+            findReadyGlbUrl(variant.product.media.nodes) ??
+            binding.modelUrl,
         },
       ];
     });

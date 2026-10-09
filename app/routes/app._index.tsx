@@ -37,6 +37,9 @@ type DesignerProduct = {
     url: string;
     altText: string | null;
   } | null;
+  modelFile: {
+    reference: { url: string } | null;
+  } | null;
   variants: {
     nodes: DesignerVariant[];
   };
@@ -178,6 +181,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
             featuredImage {
               url
               altText
+            }
+            modelFile: metafield(namespace: "$app", key: "glb") {
+              reference {
+                __typename
+                ... on GenericFile {
+                  url
+                }
+              }
             }
             variants(first: 20) {
               nodes {
@@ -345,9 +356,9 @@ export default function Index() {
               {products.flatMap((product) =>
                 product.variants.nodes.map((variant) => {
                   const binding = bindingByVariant.get(variant.id);
-                  const modelStatus = getModel3dAvailability(
-                    product.media.nodes,
-                  );
+                  const modelStatus = product.modelFile?.reference?.url
+                    ? ("ready" as const)
+                    : getModel3dAvailability(product.media.nodes);
                   return (
                     <s-table-row key={variant.id}>
                       <s-table-cell>
